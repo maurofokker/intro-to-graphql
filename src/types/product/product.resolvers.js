@@ -3,6 +3,7 @@ import { User, roles } from '../user/user.model'
 import { AuthenticationError } from 'apollo-server'
 import mongoose from 'mongoose'
 
+// key match enum in graphql and value match name of the type
 const productsTypeMatcher = {
   GAMING_PC: 'GamingPc',
   BIKE: 'Bike',
@@ -52,7 +53,9 @@ export default {
     removeProduct
   },
   Product: {
-    __resolveType(product) {},
+    __resolveType(product) {
+      return productsTypeMatcher[product.type] // in order to resolve to type in interface schema.. given a product.type return GamingPc, Bike or Drone type
+    },
     createdBy(product) {
       return User.findById(product.createdBy)
         .lean()

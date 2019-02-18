@@ -71,3 +71,76 @@ There are many many ways to authenticate with GraphQL. Our API is a public API, 
 
 ### Testing
 The other types don't have any test, go ahead and write some!
+
+
+### Interfaces, Fragments and Unions
+
+tldr; inheritable types for ur schema
+
+- Interface can be used as a base type and other types can implement that interface (this is bc some types are very similar with the exception o a few fields)
+```graphql
+interface Animal {
+  species: String!
+  location: String!
+}
+
+type Tiger implements Animal {
+  species: String!
+  location: String!
+  stripes: Int
+}
+
+type Lion implements Animal {
+  species: String!
+  mainColor
+}
+
+type Query {
+
+}
+
+schema {
+  query: Query
+}
+
+
+resolvers: {
+  Query: {
+    animals() {
+	  return [{species: 'Tiger', stripes: 3}, {species: 'Lion', mainColor: 'yellow'}]
+	}
+  },
+  Animal: {
+    __resolveType(animal) {
+	  return animal.species
+	}
+  }
+}
+```
+- When a type implement a base type it must declare all the properties in the interface so there is no time saving... but you can query for all the objects that implement the base type and has those properties... i.e. query for all the Animals and you can gent the species and location... but not the stripes though
+- In order to conditionally ask for type specific fields (like stripes in Tiger), you have to use `fragments` in your request query
+```graphql
+{
+  animals {
+    species
+	... on Lion {
+	  mainColor
+	}
+	... on Tiger {
+	  stripes
+	}
+  }
+}
+```
+  - `... on <type_name> { [specific_field_of_type] }` is the `fragment` and allows to specify fields of type
+  - `__resolveType(..)` it is important when using interfaces ... research more about this subject
+  
+  - Unions: tldr; a combination type that can be one of many different types that may not relate to each other
+    - this is util when you want a query be able to return more than just one type
+	- create a type composed by many other types
+	- util for search queries
+	- you still needs to specify `__resulveType(..)` to know what type resolves the union just like the interface
+	```graphql
+	  union SearchType = DocsType | TagType | RestaurantType
+	```
+
